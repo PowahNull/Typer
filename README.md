@@ -1,5 +1,5 @@
 # Typer
-Program for typing command scripts in roblox in C
+Program for typing command scripts in roblox in C (NOT C++!!!! THEY ARE NOT THE SAME)
 
 USAGE\
 -- compilation:\
