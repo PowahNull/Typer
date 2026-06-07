@@ -1,10 +1,12 @@
-//Example command
-changegamemode isle
-wait 5.000
-changemap archipelago
+_Example command
+type "hello world!" 1
+wait "s" 2
+type "hello again!" 1
+press "up"
 
-// wait <float n> (wait for n seconds)
-// up\ (up arrow key)
-// down\ (down arrow key)
-// enter\ (enter/return key)
-// other (type the entire thing and append an enter)
+
+
+_ repeating loop
+repeat "main loop" 5
+      type "this will be typed 5 times!" 1
+end "main loop"
