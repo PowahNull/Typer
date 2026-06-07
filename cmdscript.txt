@@ -1,0 +1,15 @@
+type "string" <int n> --type out a string
+if n == 1 then press enter
+
+press "key" <int n> --press a special key such as enter and up arrow key
+if n > 1 then press n times
+"key" = "enter" or "up" or "down" or "left" or "right"
+
+wait "type" <delay> -- delay by seconds, miliseconds or microseconds
+"type" = "s" or "ms" or "us"
+
+repeat "label" <number of times> --repeat structure
+
+random "label" --execute one command from the label
+
+end "label" --end of a structure
