@@ -13,3 +13,5 @@ repeat "label" <number of times> --repeat structure
 random "label" --execute one command from the label
 
 end "label" --end of a structure
+
+_ at the start of a line to comment
