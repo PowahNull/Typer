@@ -1,4 +1,5 @@
 #include <time.h>
+#include <math.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 static pthread_t thread_id;
 int thread_working = 0;
 
+static clock_t start_time = 0;
+
 typedef struct cmd
 {
     char* type;
@@ -18,6 +21,33 @@ typedef struct cmd
     int val;
 } cmd;
 
+
+unsigned long xorshift_64() {
+    unsigned long x = (unsigned long) clock() - start_time;
+    // Mega shuffle
+    for (int i = 0; i < 10; i++)
+    {
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+    }
+    return x;
+}
+
+void log_time()
+{
+    double time = ((double) (clock() - start_time)) / CLOCKS_PER_SEC;
+    int min = (int) (time / 60.0);
+    double second = fmod(time, 60.0);
+
+    double int_sec;
+    double float_ms = modf(second, &int_sec);
+
+    int sec = (int) int_sec;
+    int msec = (int) (float_ms * 1000.0);
+
+    printf("\033[35m<%dm %ds %dms>\033[0m ", min, sec, msec);
+}
 
 void type_char_std(char Char)
 {
@@ -243,7 +273,6 @@ void Interpreter(cmd* commands, int cmd_size)
         else if (0 == strcmp(type, "random"))
         {
             // go to the end until found end then select random value to jump to
-            int rand_start = i;
             int rand_size = 0;
             for (int j = i + 1; j < cmd_size; j++)
             {
@@ -266,8 +295,7 @@ void Interpreter(cmd* commands, int cmd_size)
             }
             else
             {
-                // Perform random
-                int random = i + 1 + rand() % rand_size;
+                int random = i + 1 + xorshift_64() % rand_size;
                 PerformCMD(commands[random]);
                 i += rand_size + 1;
             }
@@ -314,7 +342,8 @@ void* AsyncWork(void* args)
     if (file == NULL) 
     {
         thread_working = 0;
-        perror("Error opening cmd.txt\n");
+        log_time();
+        printf("\033[31mError opening cmd.txt\033[0m\n");
         return NULL;
     }
 
@@ -515,10 +544,16 @@ void* AsyncWork(void* args)
 
     fclose(file);
 
+    log_time();
+    printf("\033[36mStarted execution\033[0m\n");
+
     Interpreter(commands, cmd_ptr);
     FreeMemory(commands, cmd_ptr);
 
     thread_working = 0;
+
+    log_time();
+    printf("\033[34mFinished execution\033[0m\n");
     return NULL;
 }
 
@@ -539,9 +574,12 @@ LRESULT CALLBACK KeyboardProcedure(int nCode, WPARAM wParam, LPARAM lParam)
                 // Type message into here
                 if (!thread_working)
                 {
+                    log_time();
+                    printf("\033[32mDetected user input\033[0m\n");
                     if (0 != pthread_create(&thread_id, NULL, AsyncWork, NULL))
                     {
-                        printf("thread creation failed");
+                        log_time();
+                        printf("\033[31mThread creation failed![0m\n");
                         PostQuitMessage(0);
                     }
                     else
@@ -563,8 +601,8 @@ LRESULT CALLBACK KeyboardProcedure(int nCode, WPARAM wParam, LPARAM lParam)
 
 int main()
 {
-    // Seed the random number generator
-    srand(time(NULL));
+    // Start time
+    start_time = clock();
 
     // Set the global low level keyboard hook
     hKeyboardHook = SetWindowsHookEx(
@@ -575,11 +613,13 @@ int main()
     );
 
     if (hKeyboardHook == NULL) {
-        printf("Failed to install hook\n");
+        log_time();
+        printf("\033[31mFailed to install hook[0m\n");
         return 1;
     }
 
-    printf("Program started\n");
+    log_time();
+    printf("\033[37mProgram Started\033[0m\n");
 
     // Message loop to keep the application alive and process hook events
     MSG msg;
@@ -588,7 +628,8 @@ int main()
         DispatchMessage(&msg);
     }
 
-    printf("Program exited\n");
+    log_time();
+    printf("\033[37mProgram Finished\033[0m\n");
 
     // Unhook the keyboard before exiting
     UnhookWindowsHookEx(hKeyboardHook);
